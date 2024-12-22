@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #333;
+        }
+        #snowCanvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="snowCanvas"></canvas>
+    <script>
+    const canvas = document.getElementById("snowCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const bobaImg = new Image();
+    bobaImg.src = "boba.jpg";
+    let bobaX = 100, bobaY = 100, bobaVX = 2, bobaVY = 2;
+    const bobaSize = 50;
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const flakes = [], stuckFlakes = [], maxFlakes = 100;
+    function createFlake() {
+    return { x: Math.random() * canvas.width, y: -10, r: Math.random() * 3 + 2, d: Math.random() + 1,
+                stuck: false, vx: 0, vy: 0 };
+    }
+
+    function initFlakes() {
+        for (let i = 0; i < maxFlakes; i++) flakes.push(createFlake());
+    }
+
+    function bobaCollision(x, y, r) {
+        const bx = bobaX + bobaSize / 2, by = bobaY + bobaSize / 2;
+        const dx = x - bx, dy = y - by, dist = Math.sqrt(dx*dx + dy*dy);
+        return dist < bobaSize / 2 + r;
+    }
+
+    function drawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bobaImg, bobaX, bobaY, bobaSize, bobaSize);
+        for (let s of stuckFlakes) {
+            ctx.fillStyle = s.color || "#fff";
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = "#fff";
+        for (let f of flakes) {
+            ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    function hitsStuckFlakes(f) {
+        for (let s of stuckFlakes) {
+            const dx = f.x - s.x, dy = f.y - s.y, dist = Math.sqrt(dx*dx+dy*dy);
+            if (dist < f.r + s.r) return true;
+        }
+        return false;
+    }
+
+    function pushFlakeFromBoba(f) {
+        const bx = bobaX + bobaSize/2, by = bobaY + bobaSize/2;
+        const dx = f.x - bx, dy = f.y - by, dist = Math.sqrt(dx*dx + dy*dy), minDist = (bobaSize / 2) + f.r;
+        if (dist < minDist) {
+            const ang = Math.atan2(dy, dx), push = 2;
+            f.vx = Math.cos(ang) * push; f.vy = Math.sin(ang) * push;
+        }
+    }
+
+    let angle = 0;
+    function update() {
+        angle += 0.01;
+        bobaX += bobaVX; bobaY += bobaVY;
+        if (bobaX < 0 || bobaX + bobaSize > canvas.width) bobaVX *= -1;
+        if (bobaY < 0 || bobaY + bobaSize > canvas.height) bobaVY *= -1;
+        for (let s of stuckFlakes) {
+            if (bobaCollision(s.x, s.y, s.r)) s.color = "#fbc799";
+        }
+        for (let f of flakes) {
+            if (!f.stuck) {
+            pushFlakeFromBoba(f);
+            f.x += Math.sin(angle)*2 + f.vx; f.y += Math.pow(f.d, 2) + 1 + f.vy;
+            f.vx *= 0.9; f.vy *= 0.9;
+            if (f.y + f.r >= canvas.height || hitsStuckFlakes(f)) {
+                f.stuck = true; stuckFlakes.push({ x: f.x, y: f.y, r: f.r, color: "#fff" });
+                Object.assign(f, createFlake());
+            }
+            }
+        }
+    }
+
+    function animate() {
+        drawAll();
+        update();
+        requestAnimationFrame(animate);
+    }
+
+    initFlakes();
+    animate();
+    </script>
+</body>
+</html>
