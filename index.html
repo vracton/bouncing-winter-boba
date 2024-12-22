@@ -21,7 +21,8 @@
     const bobaImg = new Image();
     bobaImg.src = "boba.jpg";
     let bobaX = 100, bobaY = 100, bobaVX = 2, bobaVY = 2;
-    const bobaSize = 50;
+    const bobaSize = 60;
+    const bobaLabel = "bouncy boba";
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -32,7 +33,7 @@
 
     const flakes = [], stuckFlakes = [], maxFlakes = 100;
     function createFlake() {
-    return { x: Math.random() * canvas.width, y: -10, r: Math.random() * 3 + 2, d: Math.random() + 1,
+        return { x: Math.random() * canvas.width, y: -10, r: Math.random() * 3 + 2, d: Math.random() + 1,
                 stuck: false, vx: 0, vy: 0 };
     }
 
@@ -49,6 +50,9 @@
     function drawAll() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(bobaImg, bobaX, bobaY, bobaSize, bobaSize);
+        ctx.fillStyle = "#fff";
+        ctx.font = "20px Arial";
+        ctx.fillText(bobaLabel, bobaX-28, bobaY - 10);
         for (let s of stuckFlakes) {
             ctx.fillStyle = s.color || "#fff";
             ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
@@ -87,13 +91,13 @@
         }
         for (let f of flakes) {
             if (!f.stuck) {
-            pushFlakeFromBoba(f);
-            f.x += Math.sin(angle)*2 + f.vx; f.y += Math.pow(f.d, 2) + 1 + f.vy;
-            f.vx *= 0.9; f.vy *= 0.9;
-            if (f.y + f.r >= canvas.height || hitsStuckFlakes(f)) {
-                f.stuck = true; stuckFlakes.push({ x: f.x, y: f.y, r: f.r, color: "#fff" });
-                Object.assign(f, createFlake());
-            }
+                pushFlakeFromBoba(f);
+                f.x += Math.sin(angle)*2 + f.vx; f.y += Math.pow(f.d, 2) + 1 + f.vy;
+                f.vx *= 0.9; f.vy *= 0.9;
+                if (f.y + f.r >= canvas.height || hitsStuckFlakes(f)) {
+                    f.stuck = true; stuckFlakes.push({ x: f.x, y: f.y, r: f.r, color: "#fff" });
+                    Object.assign(f, createFlake());
+                }
             }
         }
     }
